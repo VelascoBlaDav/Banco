@@ -20,18 +20,12 @@ public class Connection extends Thread {
             this.start();
         } catch(IOException e) {System.out.println("Connection:"+e.getMessage());}
     }
+    @Override
     public void run(){
         try {			                 
-            String data = in.readUTF();	 
-            String [] datos=data.split(",");
-            int resultado=0;
-            int op1=Integer.parseInt(datos[0]);
-
-            //case opcion:
-            
-            
-            out.writeUTF(String.valueOf(resultado));
-        }catch (EOFException e){System.out.println("EOF:"+e.getMessage());
+            Principal.procesarDato(in,out);
+            Principal.guardarFichero();
+        } catch (EOFException e){System.out.println("EOF:"+e.getMessage());
         } catch(IOException e) {System.out.println("readline:"+e.getMessage());
         } finally{ try {clientSocket.close();}catch (IOException e){/*close failed*/}}
     }
