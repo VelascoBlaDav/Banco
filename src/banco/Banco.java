@@ -25,6 +25,8 @@ public class Banco {
             }
         } catch(IOException e) {System.out.println("Listen socket:"+e.getMessage());}
     }
+    //Params: La funcion no recibe parámetros ni devuelve
+    //Funcion: Carga en memoria el contenido de la base de datos
     public static void lecturaFichero(){
         System.out.println("Leyendo base de datos");
         File fichero = new File("Cuentas.db");
@@ -53,6 +55,8 @@ public class Banco {
             }
         }
     }
+    //Params: La funcion no recibe parámetros ni devuelve
+    //Funcion: Guarda en BBDD el contenido en memoria
     public static boolean guardarFichero(){
         System.out.println("Guardando datos..."); 
         FileWriter fichero = null;
@@ -69,13 +73,13 @@ public class Banco {
             return false;
         }
     }
-    
-    //Funcion añadir cuenta, carga en memoria desde fichero
-    public static boolean addCuenta(int numeroCuenta,int saldo){
+    //Params: recibe un numero de Cuenta y el saldo asociado. No devuelve nada.
+    //Funcion: Crea/carga una cuenta en memoria
+    public static void addCuenta(int numeroCuenta,int saldo){
         Cuenta.Cuentas.add(new Cuenta(numeroCuenta, saldo));
-        return true;
     }
-    //Busca la cuenta proporcionada y devuelve el Objeto asociado
+    //Params: La funcion recibe el numero de cuenta a buscar. Devuelve el objeto Cuenta asociado.
+    //Funcion: Busca en memoria el objeto Cuenta asociado a un numero
     public static Cuenta buscarCuenta(int numeroCuenta){
         for (int i=0;i<Cuenta.Cuentas.size();i++){
             if(Cuenta.Cuentas.get(i).getNumeroCuenta()==numeroCuenta){
@@ -84,7 +88,8 @@ public class Banco {
         }
         return null;
     }
-    //Funcion que se encarga del proceso de la informacion entre el cliente y el servidor
+    //Params: recibe el flujo de entrada y salida con el cliente que se ha de comunicar. No devuelve nada.
+    //Funcion: Se encarga de procesar la informacion del cliente y enviar respuesta.
     public static void procesarDato(DataInputStream in, DataOutputStream out) throws IOException{
         String[] peticion;
         ArrayList<String> respuesta=new ArrayList<>();
