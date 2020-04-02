@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class Banco {
     public static void main(String args[]){
-        System.out.println("Inicializando servidor...");    //DEBUG
+        System.out.println("Inicializando servidor...");
         lecturaFichero();
         try{
             int serverPort = 8888; 
@@ -25,8 +25,8 @@ public class Banco {
             }
         } catch(IOException e) {System.out.println("Listen socket:"+e.getMessage());}
     }
-    public static boolean lecturaFichero(){
-        System.out.println("Leyendo fichero");    //DEBUG
+    public static void lecturaFichero(){
+        System.out.println("Leyendo base de datos");
         File fichero = new File("Cuentas.db");
 	Scanner s = null;
         try {
@@ -44,7 +44,7 @@ public class Banco {
         } catch (FileNotFoundException | NumberFormatException ex) {
                 System.out.println("Error: " + ex.getMessage());
         } finally {
-            // Cerramos el fichero tanto si la lectura ha sido correcta o no
+            // Intentamos cerrar el fichero tanto si la lectura ha sido correcta o no
             try {
                 if (s != null)
                     s.close();
@@ -52,13 +52,12 @@ public class Banco {
                 System.out.println("Error: " + ex2.getMessage());
             }
         }
-        return true;
     }
     public static boolean guardarFichero(){
-        System.out.println("Guardando fichero");    //DEBUG
+        System.out.println("Guardando datos..."); 
         FileWriter fichero = null;
         try {
-            fichero = new FileWriter("Cuentas2.db");
+            fichero = new FileWriter("Cuentas.db");
             for(int i=0;i<Cuenta.Cuentas.size();i++){
                 // Escribimos linea a linea en el fichero
                 fichero.write(Cuenta.Cuentas.get(i).getNumeroCuenta()+";"+Cuenta.Cuentas.get(i).getSaldo()+"\n");
@@ -71,13 +70,13 @@ public class Banco {
         }
     }
     
+    //Funcion añadir cuenta, carga en memoria desde fichero
     public static boolean addCuenta(int numeroCuenta,int saldo){
-        System.out.println("Añadiendo cuenta"+numeroCuenta+","+saldo);    //DEBUG
         Cuenta.Cuentas.add(new Cuenta(numeroCuenta, saldo));
         return true;
     }
+    //Busca la cuenta proporcionada y devuelve el Objeto asociado
     public static Cuenta buscarCuenta(int numeroCuenta){
-        System.out.println("Buscando cuenta"+numeroCuenta);    //DEBUG
         for (int i=0;i<Cuenta.Cuentas.size();i++){
             if(Cuenta.Cuentas.get(i).getNumeroCuenta()==numeroCuenta){
                 return Cuenta.Cuentas.get(i);
@@ -85,8 +84,8 @@ public class Banco {
         }
         return null;
     }
+    //Funcion que se encarga del proceso de la informacion entre el cliente y el servidor
     public static void procesarDato(DataInputStream in, DataOutputStream out) throws IOException{
-        System.out.println("Procesando dato");    //DEBUG
         String[] peticion;
         ArrayList<String> respuesta=new ArrayList<>();
         int tarea;
@@ -101,20 +100,20 @@ public class Banco {
 
             peticion=in.readUTF().split(";");
             tarea=Integer.valueOf(peticion[0]);
-            System.out.println("Tarea "+tarea+",Cuenta"+peticion[1]);    //DEBUG
             Cuenta cCliente=buscarCuenta(Integer.valueOf(peticion[1]));
             if(cCliente!=null){ //Existe la cuenta
                 switch(tarea){
+                    case 0: //Termina servicio
+                        break;
                     case 1: //lee_saldo
-                        System.out.println("Lectura saldo");    //DEBUG
                         saldo=String.valueOf(cCliente.getSaldo());
                         break;
                     case 2: //Escribe saldo
-                        System.out.println("Escribe saldo");    //DEBUG
                         cCliente.setSaldo(Integer.valueOf(peticion[2]));
+                        //Tras modificar los datos de una cuenta, se guarda en la BBDD
+                        Banco.guardarFichero();
                         break;
                     case 3: //Bloquea_cuenta
-                        System.out.println("Bloquea");    //DEBUG
                         if(cCliente.isBloqueado()){
                             error="La cuenta esta bloqueada";
                         }else{
@@ -122,25 +121,19 @@ public class Banco {
                         }
                         break;
                     case 4: //Desbloquea Cuenta
-                        System.out.println("Desbloquea");    //DEBUG
                         if(cCliente.isBloqueado()){
                             cCliente.setBloqueado(false);
                         }else{
                             error="La cuenta esta desbloqueada";
                         }          
                         break;
-                    case 5: //Termina servicio
-                        System.out.println("Termina");    //DEBUG
-                        break;
                     default:
-                        System.out.println("Otra tarea");    //DEBUG
                         error="Operacion no valida";
                         break;
                 }                
             }else{
-                error="No existe la cuenta"; //No existe
+                error="No existe la cuenta solicitada ("+Integer.valueOf(peticion[1])+")"; //No existe
             }        
-            System.out.println("ERROR:"+error);
             if(error.equals("")){   //Si no hay error = 0
                 respuesta.add(0,"0");
             }else{                  //Si hay error = 1
@@ -149,11 +142,12 @@ public class Banco {
             if(tarea==1){
                 respuesta.add(saldo);
             }
+            //Generacion del String a enviar con los datos del ArrayList
             for(int i=0;i<respuesta.size();i++){
                 respuestaUTF+=respuesta.get(i)+";";
             }
-            System.out.println(respuestaUTF);
+            //Envio de respuesta
             out.writeUTF(respuestaUTF);
-        }while(tarea!=5);
+        }while(tarea!=5);   //Bucle hasta fin
     }
 }
